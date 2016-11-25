@@ -124,26 +124,10 @@ public class Main {
 		return dictionnaire;
 	}
 
-	public static void parcourirLireTextes(int position) throws IOException, FileNotFoundException, IOException{
+	public static void parcourirLireTextes() throws IOException, FileNotFoundException, IOException{
 		File texte = new File(System.getProperty("user.home") + "/Desktop/AllTextes");
 		File[] textes = texte.listFiles();
-		//String fileName = "";
-		//		int iAux = 0;
-		//		int limite = 0;
-
-		//		if (position == 0) {
-		//			limite = 500;
-		//		
-		//		}else if(position == 500){
-		//			limite = 1000;
-		//			iAux = 500;
-		//		}else if (position == 1000) {
-		//			limite = 1500;
-		//			iAux = 1000;
-		//		}else if (position == 1500) {
-		//			limite = textes.length;
-		//			iAux = 1500;
-		//		}
+	
 
 		System.out.println(textes.length + "****************");
 
@@ -171,16 +155,7 @@ public class Main {
 						String fileName = fTest.getName();
 						br.close();
 						fr.close();
-						//				InputStream stream = new FileInputStream(textes[i].getPath());
-						//				InputStreamReader streamReader = new InputStreamReader(stream);
-						//				BufferedReader br = new BufferedReader(streamReader);
-						//				String ligne;
-						//				fileName = textes[i].getName();
-						//				
-						//				while ((ligne = br.readLine()) != null) {
-						//					contenu+=ligne;
-						//				}
-						//br.close();
+					
 
 						//on passe la chaine de caracteres qui contient le contenu du mail a verifier
 						//remplirVn(contenu, fileName);
@@ -207,10 +182,8 @@ public class Main {
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		// TODO Auto-generated method stub
 		remplirVectorZero();
-		parcourirLireTextes(0);
-		//parcourirLireTextes(500);
-		//parcourirLireTextes(1000);
-		//parcourirLireTextes(1500);
+		parcourirLireTextes();
+		
 		System.out.println(distanceVnEtV0);
 
 	}
