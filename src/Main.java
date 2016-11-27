@@ -1,49 +1,98 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
-import javax.management.relation.RelationServiceNotRegisteredException;
-import javax.security.auth.login.CredentialExpiredException;
+
+
+import java.io.*;
+import java.util.*;
+
+import javax.mail.MessagingException;
+
+
 
 public class Main {
 
-	private static	Hashtable<String, Integer> v0 = new Hashtable<String, Integer>();
-	private static	Hashtable<String, Integer> vn = vn = new Hashtable<String, Integer>();
-	private static Hashtable<String, Double> distanceVnEtV0 = new Hashtable<String, Double>();
+	private static	Map<String, Integer> v0Init = new Hashtable<String, Integer>();
+	private static	Map<String, Integer> vnInit = new Hashtable<String, Integer>();
+	private static  Map<String, Double> distanceVnEtV0 = new Hashtable<String, Double>();
+	private static ArrayList<String> dictionnaire;
 
 
-
-	public static void remplirVectorZero() throws FileNotFoundException, IOException{
-		//Lire le dictionnaire pour creer le vecteur (fichier properties)
-
-		Iterator<Object> it = chargerProperties().keySet().iterator();
-
-		while(it.hasNext()){
-			String propertyName = (String) it.next();
-			String propertyValue = chargerProperties().getProperty(propertyName);
-			v0.put(propertyName, Integer.parseInt(propertyValue));
-
+	/**
+	 * initialiser le tableau qui contient les mots du dictionnaire
+	 * @throws IOException 
+	 */
+	public static void initialiserTabDico() throws IOException{
+		dictionnaire = new ArrayList<>();
+		
+		//lire fichier texte qui contient les mots
+		File dicoFile = new File("properties/dictionnaire.txt"); 
+		FileReader fr = new FileReader(dicoFile);
+		BufferedReader br = new BufferedReader(fr);
+		
+		String line = br.readLine();
+		
+		while (line != null){
+			dictionnaire.add(line);
+			line = br.readLine();
 		}
+		
+		br.close();
+		fr.close();
+		
+	}
 
+	/**
+	 * il faut utiliser un fichier model pour creer le vector 0
+	 * @throws Exception 
+	 */
+	public static void remplirVectorZero() throws Exception{
+		//email
 
+		// lire le fichier model 
+		File fTest = new File("mailModel/Offres d'emploi_stage - Chargé de clientèle _ hotliner (H_F) - Aéos Consultants - Aéos Consultants - Recrutement (no-reply@ubiposting.com) - 2015-11-17 1318.eml");
+		//File fTest = new File("mailModel/Annonce de stage de fin d'études en tine Delerce-Mauris - 2016-02-05 1657.eml");
+		
+		
+		Properties p = System.getProperties();
+		p.put("mail.host", "smtp.dummydomain.com");
+		p.put("mail.transport.protocol", "smtp");
+		Session sessionMail = Session.getDefaultInstance(p, null);
+		InputStream source = new FileInputStream(fTest);
+		MimeMessage message = new MimeMessage(sessionMail, source);
+		
+		String contenuMail = getTextFromMessage(message).toLowerCase() +" "+ fTest.getName().toLowerCase();
+		
+		//System.out.println(contenuMail);
+				
+		//compter ocurrences fichier model
+		Pattern pa;
+		Matcher m;
+		//System.out.println(contenu);
+		for (String mot : dictionnaire) {
+			
+			int nbOcurrences = 0;
+			pa = Pattern.compile(mot);
+			m = pa.matcher(contenuMail);
 
-
+			
+			while (m.find()) {
+				nbOcurrences++;
+			}
+			
+			v0Init.put(mot, nbOcurrences);
+		}
+		
+		//System.out.println(v0Init);
 
 	}
 
@@ -53,27 +102,23 @@ public class Main {
 	public static void remplirVn(String contenuMail, String fileName) throws FileNotFoundException, IOException{
 
 
-		Iterator<Object> it = chargerProperties().keySet().iterator();
+		
 		Pattern p;
 		Matcher m;
-		while (it.hasNext()) {
-			//le mot qu'on cherche dans le mail
-			String propertyName = (String) it.next();
-			// le nombre d'ocurrences dans le mail du mot cherché
+		for (String mot : dictionnaire) {
+			
 			int nbOcurrences = 0;
-			p = Pattern.compile("(^|(\\s+))"+propertyName);
+			p = Pattern.compile(mot);
 			m = p.matcher(contenuMail);
 
 			while (m.find()) {
 				nbOcurrences++;
 			}
-
-			vn.put(propertyName, nbOcurrences);
+			
+			vnInit.put(mot, nbOcurrences);
 		}
 
-		//System.out.println(v0 );
-		//System.out.println(vn);
-		calculerDistance(v0.values(), vn.values(), fileName);
+		calculerDistance(v0Init.values(), vnInit.values(), fileName);
 	}
 
 	//retourne la distance de Euclidean entre le vector (array de int) n et 0
@@ -92,99 +137,128 @@ public class Main {
 		for (int i = 0; i < vn.size(); i++) {
 			resSustraction[i] = ((int) testArrayVn[i]) - ((int) testArrayV0[i]);
 
-			//System.out.println(resSustraction[i]);
 		}
 
+		//calculler la norme euclidienne
 		double sum = 0.0;
 		double euclideanNorm = 0.0;
 		for (int i = 0; i < resSustraction.length; i++) {
 			sum = sum + (resSustraction[i] * resSustraction[i]);
 		}
-		//System.out.println("sum : " + sum);
-		//
+		
 
 		euclideanNorm = Math.sqrt(sum);
 
-		//System.out.println("norm : " + euclideanNorm);
-
-		distanceVnEtV0.put(fileName, euclideanNorm);
-		//System.out.println("*************************************");
-
-
-
-
+		//calculer le produit scallaire
+		double produit = 0.0;
+		for (int i = 0; i < vn.size(); i++) {
+			produit += ((int) testArrayVn[i]) * ((int) testArrayV0[i]);
+		}
+		
+		double test = produit/euclideanNorm;
+		
+		distanceVnEtV0.put(fileName, test);
+		
+		
 	}
 
 
-
-	public static Properties chargerProperties() throws FileNotFoundException, IOException{
-		Properties dictionnaire = new Properties();
-		dictionnaire.load(new FileInputStream("properties/dictionnaire.properties"));
-
-		return dictionnaire;
-	}
-
-	public static void parcourirLireTextes() throws IOException, FileNotFoundException, IOException{
-		File texte = new File(System.getProperty("user.home") + "/Desktop/AllTextes");
-		File[] textes = texte.listFiles();
 	
-
-		System.out.println(textes.length + "****************");
-
-		if (textes != null) {
-
-			// Implementation of an ExecutorService
-			ExecutorService executorService = Executors.newFixedThreadPool(textes.length);
-			for (File file : textes) {
+	/**
+	 * classe les mail spam et pas span
+	 * le classement est fait d'accord a la distance qu'il y a entre le vector model (v0) et le
+	 * vector d'ocurrences de chaque fichier
+	 * 
+	 * le hashtable "distanceVnEtV0" contient le nom du fichier (mail) et sa distance avec
+	 * le vector model
+	 */
+	public static void classementMails(){
+		int mailSpam = 0;
+		int mailOk = 0;
+		
+		for(Map.Entry<String, Double> e : distanceVnEtV0.entrySet()){
+			if (e.getValue() < 0.8) {
+				mailSpam ++;
+				System.out.println(e.getKey());
 				
-				Runnable task = () -> {
-					try {
-						
-						File fTest = new File(file.getPath());
-						FileReader fr = new FileReader(fTest);
-						BufferedReader br = new BufferedReader(fr);
-
-						String line = br.readLine();
-						String contenu = "";
-
-						while (line != null) {
-							contenu += line;
-							line = br.readLine();
-						}
-
-						String fileName = fTest.getName();
-						br.close();
-						fr.close();
-					
-
-						//on passe la chaine de caracteres qui contient le contenu du mail a verifier
-						//remplirVn(contenu, fileName);
-
-						System.out.println("fichier = " + fileName);
-
-					} catch (Exception e) {
-						// TODO: handle exception
-						System.out.println(e.getMessage());
-					}
-				};
 				
-				executorService.execute(task);
+			}else {
+				mailOk ++;
+				//System.out.println(e.getKey());
 			}
 			
+		}
+		
+		System.out.println(mailSpam +"*************" + mailOk);
+	}
+
+
+
+	public static void parcourirLireTextes() throws Exception{
+		
+		File dir = new File("textes");
+		
+		File[] textes = dir.listFiles();
+	
+		if (textes == null) {
+			System.out.println("Le repertoire est vide ou il existe pas");
+		}else{
+
+			for (int i=0; i < textes.length; i++) {
+				
+				Properties p = System.getProperties();
+				p.put("mail.host", "smtp.dummydomain.com");
+				p.put("mail.transport.protocol", "smtp");
+				Session sessionMail = Session.getDefaultInstance(p, null);
+				InputStream source = new FileInputStream(textes[i]);
+				MimeMessage message = new MimeMessage(sessionMail, source);
+				
+				String contenuMail = getTextFromMessage(message).toLowerCase() +" "+ textes[i].getName().toLowerCase();
+				
+						
+						//on passe la chaine de caracteres qui contient le contenu du mail a verifier
+						remplirVn(contenuMail, textes[i].getName());
+			}
 			
-			System.out.println("Terminated");
 		}
 	}
 
 
+	  private static String getTextFromMessage(Message message) throws Exception {
+	        String result = "";
+	        if (message.isMimeType("text/plain")) {
+	            result = message.getContent().toString();
+	        } else if (message.isMimeType("multipart/*")) {
+	            MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+	            result = getTextFromMimeMultipart(mimeMultipart);
+	        }
+	        return result;
+	    }
 
-
-	public static void main(String[] args) throws FileNotFoundException, IOException {
-		// TODO Auto-generated method stub
+	  private static String getTextFromMimeMultipart(
+	            MimeMultipart mimeMultipart) throws Exception{
+	        String result = "";
+	        int count = mimeMultipart.getCount();
+	        for (int i = 0; i < count; i++) {
+	            BodyPart bodyPart = mimeMultipart.getBodyPart(i);
+	            if (bodyPart.isMimeType("text/plain")) {
+	                result = result + "\n" + bodyPart.getContent();
+	                break; // without break same text appears twice in my tests
+	            } else if (bodyPart.isMimeType("text/html")) {
+	                String html = (String) bodyPart.getContent();
+	                result = result + "\n" + org.jsoup.Jsoup.parse(html).text();
+	            } else if (bodyPart.getContent() instanceof MimeMultipart){
+	                result = result + getTextFromMimeMultipart((MimeMultipart)bodyPart.getContent());
+	            }
+	        }
+	        return result;
+	    }
+	  
+	public static void main(String[] args) throws Exception {
+		initialiserTabDico();
 		remplirVectorZero();
-		parcourirLireTextes();
-		
-		System.out.println(distanceVnEtV0);
+		parcourirLireTextes();	
+		classementMails();
 
 	}
 
