@@ -49,7 +49,7 @@ public class Main {
 	}
 
 	/**
-	 * il faut utiliser un fichier model pour creer le vector 0
+	 * il faut utiliser un fichier model pour remplir le V0
 	 * @throws Exception 
 	 */
 	public static void remplirVectorZero() throws Exception{
@@ -69,7 +69,6 @@ public class Main {
 		
 		String contenuMail = getTextFromMessage(message).toLowerCase() +" "+ fTest.getName().toLowerCase();
 		
-		//System.out.println(contenuMail);
 				
 		//compter ocurrences fichier model
 		Pattern pa;
@@ -93,8 +92,12 @@ public class Main {
 
 	}
 
-	/*
-	 * remplir le vecteur n a comparer avec le v0
+	/**
+	 * remplir le vecteur Vn (vecteur courrant) avec les concurrance correspondantes
+	 * @param contenuMail
+	 * @param fileName
+	 * @throws FileNotFoundException
+	 * @throws IOException
 	 */
 	public static void remplirVn(String contenuMail, String fileName) throws FileNotFoundException, IOException{
 
@@ -118,7 +121,16 @@ public class Main {
 		calculerDistance(v0Init.values(), vnInit.values(), fileName);
 	}
 
-	//retourne la distance de Euclidean entre le vector (array de int) n et 0
+	/**
+	 * ici on fait les calcules de
+	 * norme euclediene
+	 * produit scallaire
+	 * cos
+	 * comparation entre le V0 et le Vn
+	 * @param v0
+	 * @param vn
+	 * @param fileName
+	 */
 	public static void calculerDistance(Collection<Integer> v0, Collection<Integer> vn, String fileName){
 
 		if (v0.size() != vn.size()) {
@@ -152,9 +164,9 @@ public class Main {
 			produit += ((int) testArrayVn[i]) * ((int) testArrayV0[i]);
 		}
 		
-		double test = produit/euclideanNorm;
+		double cos = produit/euclideanNorm;
 		
-		distanceVnEtV0.put(fileName, test);
+		distanceVnEtV0.put(fileName, cos);
 		
 		
 	}
@@ -192,6 +204,10 @@ public class Main {
 
 
 
+	/**
+	 * parcourir les mails pour obtenir leur contenu
+	 * @throws Exception
+	 */
 	public static void parcourirLireTextes() throws Exception{
 		
 		File dir = new File("textes");
@@ -222,6 +238,12 @@ public class Main {
 	}
 
 
+	/**
+	 * get le "message" texte plain du mail
+	 * @param message
+	 * @return
+	 * @throws Exception
+	 */
 	  private static String getTextFromMessage(Message message) throws Exception {
 	        String result = "";
 	        if (message.isMimeType("text/plain")) {
@@ -233,6 +255,12 @@ public class Main {
 	        return result;
 	    }
 
+	  /**
+	   * get texte multipart du mail
+	   * @param mimeMultipart
+	   * @return
+	   * @throws Exception
+	   */
 	  private static String getTextFromMimeMultipart(
 	            MimeMultipart mimeMultipart) throws Exception{
 	        String result = "";
