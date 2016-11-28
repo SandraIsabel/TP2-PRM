@@ -10,12 +10,9 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-
-
 import java.io.*;
 import java.util.*;
 
-import javax.mail.MessagingException;
 
 
 
@@ -60,8 +57,8 @@ public class Main {
 
 		// lire le fichier model 
 		File fTest = new File("mailModel/Offres d'emploi_stage - Chargé de clientèle _ hotliner (H_F) - Aéos Consultants - Aéos Consultants - Recrutement (no-reply@ubiposting.com) - 2015-11-17 1318.eml");
-		//File fTest = new File("mailModel/Annonce de stage de fin d'études en tine Delerce-Mauris - 2016-02-05 1657.eml");
-		
+		//File fTest = new File("mailModel/Annonce de stage de fin d'études en tine Delerce-Mauris - 2016-02-05 1657.eml"); 
+		//File fTest = new File("mailModel/Offre de stage - Ralitsa BONEVA (RBONEVA@alterea.fr) - 2016-01-21 1200.eml");
 		
 		Properties p = System.getProperties();
 		p.put("mail.host", "smtp.dummydomain.com");
@@ -179,17 +176,18 @@ public class Main {
 		for(Map.Entry<String, Double> e : distanceVnEtV0.entrySet()){
 			if (e.getValue() < 0.8) {
 				mailSpam ++;
-				System.out.println(e.getKey());
+				System.out.println(e.getValue() +" "+ e.getKey());
 				
 				
 			}else {
 				mailOk ++;
-				//System.out.println(e.getKey());
+				//System.out.println(e.getValue() +"*"+ e.getKey());
 			}
 			
 		}
 		
-		System.out.println(mailSpam +"*************" + mailOk);
+		System.out.println("Nombre mails classifies comme spam: " + mailSpam);
+		System.out.println("Nombre mails classifies comme OK: " + mailOk);
 	}
 
 
